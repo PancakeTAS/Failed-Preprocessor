@@ -1,0 +1,11 @@
+plugins {
+    id 'java-library'
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation group: 'net.lingala.zip4j', name: 'zip4j', version: '2.8.0'
+}
