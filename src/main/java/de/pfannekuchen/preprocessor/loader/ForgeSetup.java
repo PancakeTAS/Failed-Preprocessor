@@ -18,6 +18,8 @@ import de.pfannekuchen.preprocessor.gradle.GradleSubproject;
  */
 public class ForgeSetup {
 	
+	public static final String JVMARGS = "-Xmx1G -Xms128M -Xmn128m -XX:+DisableExplicitGC -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+UseNUMA -XX:+CMSParallelRemarkEnabled -XX:MaxTenuringThreshold=15 -XX:MaxGCPauseMillis=30 -XX:GCPauseIntervalMillis=150 -XX:+UseAdaptiveGCBoundary -XX:-UseGCOverheadLimit -XX:+UseBiasedLocking -XX:SurvivorRatio=8 -XX:TargetSurvivorRatio=90 -XX:MaxTenuringThreshold=15 -XX:+UseFastAccessorMethods -XX:+UseCompressedOops -XX:+OptimizeStringConcat -XX:+AggressiveOpts -XX:ReservedCodeCacheSize=2048m -XX:+UseCodeCacheFlushing -XX:SoftRefLRUPolicyMSPerMB=2000 -XX:ParallelGCThreads=10";
+	
 	/**
 	 * Forge Versions
 	 * @author Pancake
@@ -44,9 +46,6 @@ public class ForgeSetup {
 	 * @throws MalformedURLException Throws whenever an Invalid Version is being used
 	 */
 	public static void setupForge(GradleSubproject directory, Forge version, Mappings channel, String mappings, String modid, String modname, String modgroup, String modauthor, String modversion, String moddescription, String... javaHome) throws MalformedURLException, IOException {
-		// Remove Build/Bin Folder
-		new File(directory.getLocation(), "bin").delete();
-		new File(directory.getLocation(), "build").delete();
 		// Create important Files
 		new File(directory.getLocation(), "src/main/java").mkdirs();
 		new File(directory.getLocation(), "src/main/resources").mkdirs();
@@ -71,22 +70,14 @@ public class ForgeSetup {
 				.replaceAll("%MAPPINGSVERSION%", mappings)
 			);
 		}
-		writer.println("org.gradle.jvmargs=-Xmx1250M");
-		writer.println("org.gradle.daemon=false");
+		directory.JVMARGS = JVMARGS;
+		writer.println("org.gradle.jvmargs=" + JVMARGS);
 		if (javaHome.length == 1) writer.println("org.gradle.java.home=" + javaHome[0]);
 		writer.close();
 		reader.close();
-		// Check whether SetupDecompWorkspace has been executed yet
-		if (!new File(System.getProperty("user.home") + "/.gradle/caches/minecraft/net/minecraftforge/forge/" + forgeVersion + "/" + channel.name().toLowerCase() + "/" + mappings + "/").exists()) {
-			System.out.println("SetupDecompWorkspace hasn't been executed yet. Running in the background");
-			new Thread(() -> {
-				try {
-					directory.executeTask("setupDecompWorkspace");
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}).start();
-		}
+		// Check whether setupCiWorkspace has been executed yet
+		if (!new File(System.getProperty("user.home") + "/.gradle/caches/minecraft/net/minecraftforge/forge/" + forgeVersion + "/" + channel.name().toLowerCase() + "/" + mappings + "/").exists())
+			directory.queueTask("setupCiWorkspace");
 	}
 	
 }

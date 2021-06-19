@@ -18,6 +18,8 @@ import de.pfannekuchen.preprocessor.gradle.GradleSubproject;
  */
 public class FabricSetup {
 	
+	public static final String JVMARGS = "-Xmx1G -Xms128M -Xmn128m -XX:+UseZGC -XX:+UseNUMA -XX:MaxTenuringThreshold=15 -XX:MaxGCPauseMillis=30 -XX:GCPauseIntervalMillis=150 -XX:-UseGCOverheadLimit -XX:SurvivorRatio=8 -XX:TargetSurvivorRatio=90 -XX:MaxTenuringThreshold=15 -XX:+UseCompressedOops -XX:+OptimizeStringConcat -XX:ReservedCodeCacheSize=2048m -XX:+UseCodeCacheFlushing -XX:SoftRefLRUPolicyMSPerMB=2000 -XX:ParallelGCThreads=10";
+	
 	/**
 	 * Fabric Minecraft Versions
 	 * @author Pancake
@@ -35,9 +37,6 @@ public class FabricSetup {
 	 * @throws MalformedURLException Throws whenever an Invalid Version is being used
 	 */
 	public static void setupFabric(GradleSubproject directory, Fabric version, String yarn, String modname, String modgroup, String modversion, String loaderversion, String fabricapiversion, String... javaHome) throws MalformedURLException, IOException {
-		// Remove Build/Bin Folder
-		new File(directory.getLocation(), "bin").delete();
-		new File(directory.getLocation(), "build").delete();
 		// Create important Files
 		new File(directory.getLocation(), "src/main/java").mkdirs();
 		new File(directory.getLocation(), "src/main/resources").mkdirs();
@@ -58,12 +57,11 @@ public class FabricSetup {
 				.replaceAll("%LOADER%", loaderversion)
 			);
 		}
-		writer.println("org.gradle.jvmargs=-Xmx1250M");
-		writer.println("org.gradle.daemon=false");
+		directory.JVMARGS = JVMARGS;
+		writer.println("org.gradle.jvmargs=" + JVMARGS);
 		if (javaHome.length == 1) writer.println("org.gradle.java.home=" + javaHome[0]);
 		writer.close();
 		reader.close();
-		// Note: you don't have to run genSources ever. <3 Fabric
 	}
 	
 }

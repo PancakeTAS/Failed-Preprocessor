@@ -11,36 +11,40 @@ import java.util.Queue;
  */
 public class GradleSubproject {
 
+	public String JVMARGS;
 	private File location;
 	private File gradle;
+	private String javahome;
 	private boolean locked;
 	private Queue<Runnable> queuedTasks = new LinkedList<>();
 	
 	/**
 	 * Initializes a Subproject
 	 * @param subprojectFolder Folder of the Subproject
+	 * @param java8 
 	 */
-	public GradleSubproject(File subprojectFolder, File gradle) {
+	public GradleSubproject(File subprojectFolder, File gradle, String javahome) {
 		subprojectFolder.mkdirs(); // Create Subfolder
 		this.location = subprojectFolder;
+		this.javahome = javahome;
 		this.gradle = gradle;
 	}
 
 	/**
 	 * Executes a Task
 	 * @param task Task to Execute
-	 * @throws IOException Throws when the Process couldn't be executed
 	 */
-	public void executeTask(String task) throws IOException {
-		if (locked) throw new IOException("Gradle Instance Locked Exception");
+	private void executeTask(String task) throws IOException {
 		locked = true;
 		final File GRADLE = new File(gradle.listFiles()[0], "bin/gradle.bat");
-		ProcessBuilder processBuilder = new ProcessBuilder(GRADLE.getAbsolutePath(), task, "--no-daemon");
+		ProcessBuilder processBuilder = new ProcessBuilder(GRADLE.getAbsolutePath(), task, "-parallel", "--build-cache", "--configure-on-demand", "--no-daemon");
 		processBuilder.directory(location);
+		processBuilder.environment().put("JAVA_HOME", javahome);
+		processBuilder.environment().put("JAVA_OPTS", JVMARGS);
 		processBuilder.inheritIO();
 		processBuilder.start();
-		locked = false;
 		if (!queuedTasks.isEmpty()) new Thread(queuedTasks.poll(), "Task Worker").run(); // Run next Task if any
+		locked = false;
 	}
 	
 	/**
@@ -48,11 +52,7 @@ public class GradleSubproject {
 	 * @param task Task to Execute
 	 * @throws IOException Throws when the Process couldn't be executed
 	 */
-	public void executeTaskAfter(String task) throws IOException {
-		if (!locked) {
-			executeTask(task);
-			return;
-		}
+	public void queueTask(String task) throws IOException {
 		queuedTasks.add(() -> {
 			try {
 				executeTask(task);
@@ -60,6 +60,7 @@ public class GradleSubproject {
 				e.printStackTrace();
 			}
 		});
+		if (!locked) new Thread(queuedTasks.poll(), "Task Worker").run();
 	}
 	
 	/** @return Locked State */
@@ -75,6 +76,20 @@ public class GradleSubproject {
 	/** @return Gradle Directory */
 	public File getGradle() {
 		return gradle;
+	}
+
+	/** 
+	 * Locks the Gradle Instance and queue all new Tasks, can be used if a Task has to be executed async
+	 */
+	public void lock() {
+		locked = true;
+	}
+
+	/**
+	 * Unlocks the Gradle Instance and executes the next queud Task
+	 */
+	public void unlock() {
+		if (!queuedTasks.isEmpty()) new Thread(queuedTasks.poll(), "Task Worker").run();
 	}
 	
 }
