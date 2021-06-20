@@ -1,7 +1,6 @@
 package de.pfannekuchen.preprocessor.gradle;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -34,10 +33,10 @@ public class GradleSubproject {
 	 * Executes a Task
 	 * @param task Task to Execute
 	 */
-	private void executeTask(String task) throws IOException {
+	private void executeTask(String task) throws Exception {
 		locked = true;
 		final File GRADLE = new File(gradle.listFiles()[0], "bin/gradle.bat");
-		ProcessBuilder processBuilder = new ProcessBuilder(GRADLE.getAbsolutePath(), task, "-parallel", "--build-cache", "--configure-on-demand", "--no-daemon");
+		ProcessBuilder processBuilder = new ProcessBuilder(GRADLE.getAbsolutePath(), task, "--parallel", "--build-cache", "--configure-on-demand", "--no-daemon");
 		processBuilder.directory(location);
 		processBuilder.environment().put("JAVA_HOME", javahome);
 		processBuilder.environment().put("JAVA_OPTS", JVMARGS);
@@ -52,11 +51,11 @@ public class GradleSubproject {
 	 * @param task Task to Execute
 	 * @throws IOException Throws when the Process couldn't be executed
 	 */
-	public void queueTask(String task) throws IOException {
+	public void queueTask(String task) throws Exception {
 		queuedTasks.add(() -> {
 			try {
 				executeTask(task);
-			} catch (IOException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		});

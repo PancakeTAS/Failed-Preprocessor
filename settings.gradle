@@ -1,0 +1,10 @@
+/**
+ * Add the local maven server to the Plugin repository, so the example mod can get the plugin
+ */
+pluginManagement {
+	repositories {
+		mavenLocal()
+		mavenCentral()
+	}
+}
+include "ExampleMod"

@@ -2,10 +2,8 @@ package de.pfannekuchen.preprocessor.loader;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
@@ -42,10 +40,9 @@ public class ForgeSetup {
 	 * @param version Forge Version
 	 * @param channel Mappings Channel
 	 * @param mappings Mappings Version
-	 * @throws IOException Throws whenever Files couldn't be created
-	 * @throws MalformedURLException Throws whenever an Invalid Version is being used
+	 * @throws Exception Throws whenever Files couldn't be created
 	 */
-	public static void setupForge(GradleSubproject directory, Forge version, Mappings channel, String mappings, String modid, String modname, String modgroup, String modauthor, String modversion, String moddescription, String... javaHome) throws MalformedURLException, IOException {
+	public static void setupForge(GradleSubproject directory, Forge version, Mappings channel, String mappings, String modid, String modname, String modgroup, String modauthor, String modversion, String moddescription, String... javaHome) throws Exception {
 		// Create important Files
 		new File(directory.getLocation(), "src/main/java").mkdirs();
 		new File(directory.getLocation(), "src/main/resources").mkdirs();
@@ -76,8 +73,11 @@ public class ForgeSetup {
 		writer.close();
 		reader.close();
 		// Check whether setupCiWorkspace has been executed yet
-		if (!new File(System.getProperty("user.home") + "/.gradle/caches/minecraft/net/minecraftforge/forge/" + forgeVersion + "/" + channel.name().toLowerCase() + "/" + mappings + "/").exists())
+		// TODO: This not work something weird
+		if (!new File(System.getProperty("user.home") + "/.gradle/caches/minecraft/net/minecraftforge/forge/" + forgeVersion + "/" + channel.name().toLowerCase() + "/" + mappings + "/").exists()) {
+			System.err.println("Running setupCiWorkspace, please wait a minute or so before building.");
 			directory.queueTask("setupCiWorkspace");
+		}
 	}
 	
 }

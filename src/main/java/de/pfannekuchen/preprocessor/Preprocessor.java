@@ -1,6 +1,14 @@
 package de.pfannekuchen.preprocessor;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.gradle.api.Plugin;
+import org.gradle.api.Project;
+import org.gradle.api.provider.ListProperty;
+import org.gradle.api.provider.MapProperty;
+import org.gradle.api.provider.Property;
 
 import de.pfannekuchen.preprocessor.gradle.GradleDownloader;
 import de.pfannekuchen.preprocessor.gradle.GradleSubproject;
@@ -9,50 +17,78 @@ import de.pfannekuchen.preprocessor.loader.FabricSetup.Fabric;
 import de.pfannekuchen.preprocessor.loader.ForgeSetup;
 import de.pfannekuchen.preprocessor.loader.ForgeSetup.Forge;
 import de.pfannekuchen.preprocessor.loader.ForgeSetup.Mappings;
+import de.pfannekuchen.preprocessor.tasks.BuildAll;
 
-public class Preprocessor {
-
-	public static final String JAVA16 = "C:/Program Files/AdoptOpenJDK/jdk-16.0.1.9-hotspot/";
-	public static final String JAVA8 = "C:/Program Files/AdoptOpenJDK/jdk-8.0.275.1-openj9/";
+/**
+ * Gradle Plugin Entry Point
+ * @author Pancake
+ */
+public class Preprocessor implements Plugin<Project> {
 	
-	/** 
-	 * Method used for Testing the Preprocessor
-	 * @param args Ignored Arguments
+	public static Map<String, GradleSubproject> subprojects = new HashMap<>();
+	
+	@Override
+	public void apply(Project project) {
+		ModData modData = project.getExtensions().create("mod", ModData.class);
+		PluginData pluginData = project.getExtensions().create("plugin", PluginData.class);
+		project.afterEvaluate((_project) -> {
+			System.out.println("Preparing Subprojects.. This might take while on the first run");
+			try {
+				/* Create Subprojects for all Versions */
+				for (String version : pluginData.getVersions().get()) {
+					System.out.println("Settings up " + version);
+					// Check whether current version is Forge or Fabric
+					if (Integer.parseInt(version.split("\\.")[1]) >= 14) { // XXX: This line would not work with Snapshots
+						// Fabric
+						GradleSubproject gradle = new GradleSubproject(new File(project.getBuildDir(), "mc/" + version + "/"), GradleDownloader.getGradleVersion("7.1"), pluginData.getJava16().get());
+						String dashVersion = version.replaceAll("\\.", "_");
+						FabricSetup.setupFabric(gradle, Fabric.valueOf("MC" + dashVersion), pluginData.getYarnMappings().get().get(dashVersion), modData.getModname().get(), modData.getModgroup().get(), modData.getModversion().get(), pluginData.getFabricLoaderVersion().get(), pluginData.getFabricApiVersion().get().get(dashVersion), pluginData.getJava16().get());
+						subprojects.put(version, gradle);
+					} else {
+						// Forge
+						GradleSubproject gradle = new GradleSubproject(new File(project.getBuildDir(), "mc/" + version + "/"), GradleDownloader.getGradleVersion("4.10.3"), pluginData.getJava8().get());
+						String dashVersion = version.replaceAll("\\.", "_");
+						String mappings = pluginData.getMcpMappings().get().get(dashVersion);
+						ForgeSetup.setupForge(gradle, Forge.valueOf("MC" + dashVersion), Mappings.valueOf(mappings.split("_")[0].toUpperCase()), mappings.split("_")[1], modData.getModid().get(), modData.getModname().get(), modData.getModgroup().get(), modData.getModauthor().get(), modData.getModversion().get(), modData.getModdescription().get(), pluginData.getJava8().get());
+						subprojects.put(version, gradle);
+					}
+				}
+			} catch (Exception e) {
+				System.err.println("COULDN'T SETUP PROJECTS");
+				e.printStackTrace();
+			}
+		});
+		project.getTasks().register("buildall", BuildAll.class).get().setGroup("build");
+	}
+	
+	
+	
+	/**
+	 * Class that holds all the Data about the Mod
+	 * @author Pancake
 	 */
-	public static void main(String[] args) throws Exception {
-		// Test Forge
-		GradleSubproject mc12 = new GradleSubproject(new File("subprojects/1.12.2/"), GradleDownloader.getGradleVersion("4.10.3"), JAVA8);
-		GradleSubproject mc11 = new GradleSubproject(new File("subprojects/1.11.2/"), GradleDownloader.getGradleVersion("4.10.3"), JAVA8);
-		GradleSubproject mc10 = new GradleSubproject(new File("subprojects/1.10.2/"), GradleDownloader.getGradleVersion("4.10.3"), JAVA8);
-		GradleSubproject mc9 = new GradleSubproject(new File("subprojects/1.9.4/"), GradleDownloader.getGradleVersion("4.10.3"), JAVA8);
-		GradleSubproject mc8 = new GradleSubproject(new File("subprojects/1.8.9/"), GradleDownloader.getGradleVersion("4.10.3"), JAVA8);
-		ForgeSetup.setupForge(mc8, Forge.MC1_8_9, Mappings.STABLE, "22", "lotas", "LoTAS", "de.pfannekuchen.lotas", "Pfannekuchen", "1.0.0", "Low Optimization Tool Assisted Speedrun Mod", JAVA8);
-		ForgeSetup.setupForge(mc9, Forge.MC1_9_4, Mappings.SNAPSHOT, "20160518", "lotas", "LoTAS", "de.pfannekuchen.lotas", "Pfannekuchen", "1.0.0", "Low Optimization Tool Assisted Speedrun Mod", JAVA8);
-		ForgeSetup.setupForge(mc10, Forge.MC1_10_2, Mappings.SNAPSHOT, "20161111", "lotas", "LoTAS", "de.pfannekuchen.lotas", "Pfannekuchen", "1.0.0", "Low Optimization Tool Assisted Speedrun Mod", JAVA8);
-		ForgeSetup.setupForge(mc11, Forge.MC1_11_2, Mappings.SNAPSHOT, "20161220", "lotas", "LoTAS", "de.pfannekuchen.lotas", "Pfannekuchen", "1.0.0", "Low Optimization Tool Assisted Speedrun Mod", JAVA8);
-		ForgeSetup.setupForge(mc12, Forge.MC1_12_2, Mappings.SNAPSHOT, "20171003", "lotas", "LoTAS", "de.pfannekuchen.lotas", "Pfannekuchen", "1.0.0", "Low Optimization Tool Assisted Speedrun Mod", JAVA8);
-		mc12.queueTask("build");
-		mc11.queueTask("build");
-		mc10.queueTask("build");
-		mc9.queueTask("build");
-		mc8.queueTask("build");
-		// Test Fabric
-		GradleSubproject mc14 = new GradleSubproject(new File("subprojects/1.14.4/"), GradleDownloader.getGradleVersion("7.1"), JAVA16);
-		GradleSubproject mc15 = new GradleSubproject(new File("subprojects/1.15.2/"), GradleDownloader.getGradleVersion("7.1"), JAVA16);
-		GradleSubproject mc16 = new GradleSubproject(new File("subprojects/1.16.1/"), GradleDownloader.getGradleVersion("7.1"), JAVA16);
-		GradleSubproject mc16_2 = new GradleSubproject(new File("subprojects/1.16.5/"), GradleDownloader.getGradleVersion("7.1"), JAVA16);
-		GradleSubproject mc17 = new GradleSubproject(new File("subprojects/1.17/"), GradleDownloader.getGradleVersion("7.1"), JAVA16);
-		FabricSetup.setupFabric(mc17, Fabric.MC1_17, "1.17+build.13", "LoTAS", "de.pfannekuchen.lotas", "1.0.0", "0.11.6", "0.35.2+1.17", JAVA16);
-		FabricSetup.setupFabric(mc16_2, Fabric.MC1_16_5, "1.16.5+build.10", "LoTAS", "de.pfannekuchen.lotas", "1.0.0", "0.11.6", "0.35.1+1.16", JAVA16);
-		FabricSetup.setupFabric(mc16, Fabric.MC1_16_1, "1.16.1+build.21", "LoTAS", "de.pfannekuchen.lotas", "1.0.0", "0.11.6", "0.18.0+build.387-1.16.1", JAVA16);
-		FabricSetup.setupFabric(mc15, Fabric.MC1_15_2, "1.15.2+build.17", "LoTAS", "de.pfannekuchen.lotas", "1.0.0", "0.11.6", "0.28.5+1.15", JAVA16);
-		FabricSetup.setupFabric(mc14, Fabric.MC1_14_4, "1.14.4+build.18", "LoTAS", "de.pfannekuchen.lotas", "1.0.0", "0.11.6", "0.28.5+1.14", JAVA16);
-		mc17.queueTask("remapJar");
-		mc16_2.queueTask("remapJar");
-		mc16.queueTask("remapJar");
-		mc15.queueTask("remapJar");
-		mc14.queueTask("remapJar");
-		System.out.println("All Tasks queued, this might take a while");
+	public abstract static class ModData {
+		public abstract Property<String> getModid();
+		public abstract Property<String> getModname();
+		public abstract Property<String> getModversion();
+		public abstract Property<String> getModgroup();
+		public abstract Property<String> getModauthor();
+		public abstract Property<String> getModdescription();
+		
+	}
+	
+	/**
+	 * Class that holds all the Data for the Subprojects
+	 * @author Pancake
+	 */
+	public abstract static class PluginData {
+		public abstract Property<String> getJava8();
+		public abstract Property<String> getJava16();
+		public abstract Property<String> getFabricLoaderVersion();
+		public abstract ListProperty<String> getVersions();
+		public abstract MapProperty<String, String> getYarnMappings();
+		public abstract MapProperty<String, String> getMcpMappings();
+		public abstract MapProperty<String, String> getFabricApiVersion();
 	}
 	
 }

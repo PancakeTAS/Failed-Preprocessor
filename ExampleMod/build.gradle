@@ -1,0 +1,54 @@
+plugins {
+	id 'java'
+	id 'de.pfannekuchen.preprocessor' version '0.1.0-SNAPSHOT'
+}
+
+repositories {
+	mavenCentral() // For the Plugin to work
+}
+
+/**
+ * Some Information about our Mod
+ */
+mod {
+	modname = "test"
+	modid = "testmod"
+	modversion = "1.0.0"
+	modgroup = "de.pfannekuchen.examplemod"
+	modauthor = "pancake"
+	moddescription = "very informative description of my mod"
+}
+
+plugin {
+	// Fabric uses Java 16, while Forge does not work with 11+.
+	java16 = "C:/Program Files/AdoptOpenJDK/jdk-16.0.1.9-hotspot"
+	java8 = "C:/Program Files/AdoptOpenJDK/jdk-8.0.275.1-openj9"
+	// List of versions to export
+	versions = ['1.8.9', '1.9.4', '1.10.2', '1.11.2', '1.12.2', '1.14.4', '1.15.2', '1.16.1', '1.16.5', '1.17.0']
+	// Recommended Fabric Loader Version
+	fabricLoaderVersion = "0.11.6"
+	// Yarn Mappings for all Fabric Projects
+	yarnMappings = [
+		"1_17_0":   '1.17+build.13',
+		"1_16_5": '1.16.5+build.10',
+		"1_16_1": '1.16.1+build.21',
+		"1_15_2": '1.15.2+build.17',
+		"1_14_4": '1.14.4+build.18'
+	]
+	// MCP Bot Mappings for all Forge Projects
+	mcpMappings = [
+		"1_12_2": 'snapshot_20171003',
+		"1_11_2": 'snapshot_20161220',
+		"1_10_2": 'snapshot_20161111',
+		"1_9_4": 'snapshot_20160518',
+		"1_8_9": 'stable_22'
+	]
+	// Fabric Api for all Fabric Projects
+	fabricApiVersion = [
+		"1_17_0": '0.35.2+1.17',
+		"1_16_5": '0.35.1+1.16',
+		"1_16_1": '0.18.0+build.387-1.16.1',
+		"1_15_2": '0.28.5+1.15',
+		"1_14_4": '0.28.5+1.14'
+	]
+}

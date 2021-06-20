@@ -1,5 +1,9 @@
+/**
+ * Apply the Gradle Java Plugin for the Gradle Plugin and the Maven Publish Plugin	
+ */
 plugins {
-    id 'java-library'
+    id 'java-gradle-plugin'
+	id 'maven-publish'
 }
 
 repositories {
@@ -7,5 +11,23 @@ repositories {
 }
 
 dependencies {
-	implementation group: 'net.lingala.zip4j', name: 'zip4j', version: '2.8.0'
+	// Uses Zip4J to unzip gradle after downloading
+	implementation 'net.lingala.zip4j:zip4j:2.8.0'
+}
+
+// Name, Version and Group for this Plugin
+version = "0.1.0-SNAPSHOT"
+group = "de.pfannekuchen.preprocessor"
+archivesBaseName = "Preprocessor"
+
+/**
+ * Configuration for the Gradle Plugin
+ */
+gradlePlugin {
+    plugins {
+        preprocessor {
+            id = 'de.pfannekuchen.preprocessor'
+            implementationClass = 'de.pfannekuchen.preprocessor.Preprocessor'
+        }
+    }
 }

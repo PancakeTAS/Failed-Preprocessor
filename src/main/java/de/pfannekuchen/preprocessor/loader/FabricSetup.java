@@ -2,10 +2,8 @@ package de.pfannekuchen.preprocessor.loader;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
@@ -25,7 +23,7 @@ public class FabricSetup {
 	 * @author Pancake
 	 */
 	public static enum Fabric {
-		MC1_14_4, MC1_15_2, MC1_16_1, MC1_16_5, MC1_17;
+		MC1_14_4, MC1_15_2, MC1_16_1, MC1_16_5, MC1_17_0;
 	}
 	
 	/**
@@ -33,10 +31,9 @@ public class FabricSetup {
 	 * @param directory Gradle Subproject
 	 * @param version Fabric MC Version
 	 * @param mappings Mappings Version
-	 * @throws IOException Throws whenever Files couldn't be created
-	 * @throws MalformedURLException Throws whenever an Invalid Version is being used
+	 * @throws Exception Throws whenever Files couldn't be created
 	 */
-	public static void setupFabric(GradleSubproject directory, Fabric version, String yarn, String modname, String modgroup, String modversion, String loaderversion, String fabricapiversion, String... javaHome) throws MalformedURLException, IOException {
+	public static void setupFabric(GradleSubproject directory, Fabric version, String yarn, String modname, String modgroup, String modversion, String loaderversion, String fabricapiversion, String... javaHome) throws Exception {
 		// Create important Files
 		new File(directory.getLocation(), "src/main/java").mkdirs();
 		new File(directory.getLocation(), "src/main/resources").mkdirs();

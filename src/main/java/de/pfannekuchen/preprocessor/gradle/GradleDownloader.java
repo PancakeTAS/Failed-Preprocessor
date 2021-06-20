@@ -1,10 +1,8 @@
 package de.pfannekuchen.preprocessor.gradle;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 
 import net.lingala.zip4j.ZipFile;
 
@@ -20,21 +18,18 @@ public class GradleDownloader {
 	/**
 	 * Downloads a Gradle Distribution
 	 * @param version Gradle version to download
-	 * @throws IOException Thrown whenever the Version is incorrect or a File couldn't be created
+	 * @throws Exception Thrown whenever the Version is incorrect or a File couldn't be created
 	 */
-	public static File getGradleVersion(String version) throws IOException {
+	public static File getGradleVersion(String version) throws Exception {
 		// Create new Temporary File for Gradle Zip File
-		final File zipdestination = File.createTempFile("gradle-download", version);
-		zipdestination.deleteOnExit();
-		final File gradledestination = new File(zipdestination.getParentFile(), "gradle-" + version + "/");
+		final File gradledestination = new File(System.getProperty("user.home"), "gradle-" + version + "/");
+		final File gradlezip = new File(System.getProperty("user.home"), "gradle-" + version + ".zip");
+		gradlezip.deleteOnExit();
 		if (!gradledestination.mkdirs()) return gradledestination; // Return Gradle if it is already downloaded.
-		// Download Gradle to there
-		final URL GRADLE_URL = new URL(URL_PATTERN.replaceFirst("version", version));
-		Files.copy(GRADLE_URL.openStream(), zipdestination.toPath(), StandardCopyOption.REPLACE_EXISTING);
-		// Unzip Gradle
-		final ZipFile zipFile = new ZipFile(zipdestination);
-		zipFile.extractAll(gradledestination.getAbsolutePath());
+		// Download Gradle and Unzip Gradle
+		Files.copy(new URL(URL_PATTERN.replaceFirst("version", version)).openStream(), gradlezip.toPath());
+		new ZipFile(gradlezip).extractAll(gradledestination.getAbsolutePath());
 		return gradledestination;
 	}
-	
+
 }
