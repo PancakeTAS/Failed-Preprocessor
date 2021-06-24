@@ -1,11 +1,7 @@
 package de.pfannekuchen.lotas;
 
 public class PluginEntry {
-
-	//#if MC>=11400
-	public String hi;
-	//#else
-	public String bye;
+	//#if >= 11404
+//$$	public String fabric;
 	//#endif
-	
 }
