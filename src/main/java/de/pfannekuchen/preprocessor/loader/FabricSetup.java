@@ -38,10 +38,10 @@ public class FabricSetup {
 		new File(directory.getLocation(), "src/main/java").mkdirs();
 		new File(directory.getLocation(), "src/main/resources").mkdirs();
 		new File(directory.getLocation(), "gradle.properties").createNewFile();
-		Files.copy(new URL("http://mgnet.work/cfg/" + version.toString()).openStream(), new File(directory.getLocation(), "build.gradle").toPath(), StandardCopyOption.REPLACE_EXISTING);
-		Files.copy(new URL("http://mgnet.work/cfg/fabric.gradle").openStream(), new File(directory.getLocation(), "settings.gradle").toPath(), StandardCopyOption.REPLACE_EXISTING);
+		Files.copy(new URL("http://data.mgnet.work/preprocessor/" + version.toString()).openStream(), new File(directory.getLocation(), "build.gradle").toPath(), StandardCopyOption.REPLACE_EXISTING);
+		Files.copy(new URL("http://data.mgnet.work/preprocessor/fabric.gradle").openStream(), new File(directory.getLocation(), "settings.gradle").toPath(), StandardCopyOption.REPLACE_EXISTING);
 		// Download gradle.properties, but change values in it
-		BufferedReader reader = new BufferedReader(new InputStreamReader(new URL("http://mgnet.work/cfg/" + version.toString() + ".properties").openStream()));
+		BufferedReader reader = new BufferedReader(new InputStreamReader(new URL("http://data.mgnet.work/preprocessor/" + version.toString() + ".properties").openStream()));
 		PrintWriter writer = new PrintWriter(new File(directory.getLocation(), "gradle.properties"));
 		String _line;
 		while ((_line = reader.readLine()) != null) {
